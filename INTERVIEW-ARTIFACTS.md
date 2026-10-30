@@ -80,54 +80,17 @@ instead of rebuilding them" problem that is Blocks' harder sale.
 
 ## 2. LinkedIn post — draft (English)
 
-> Draft only, for the advocacy voice. Honest, specific, optimistic — not a
-> teardown. Publish decision is yours.
+The post draft now lives as its own paste-ready file (no markdown/asterisks):
+**[`artifacts/linkedin-post-draft.md`](artifacts/linkedin-post-draft.md)**.
 
----
+Angle: an enterprise architect doing due-diligence on a tool he's considering
+bringing into the org for an internal agent-to-agent landscape — measured, not
+hype, not a teardown; the employer is deliberately not named.
 
-**I spent an afternoon building my first agent on Blocks Network. Here's the honest developer-journey report.**
-
-Not from the outside, not from a deck — I installed the CLI, scaffolded an agent,
-validated it, tested it, and walked the path a first-time developer walks:
-`init → check → test → login → register → call`.
-
-I built a tiny one on purpose: `delivery_slot_estimator`, a *deterministic*
-delivery-window estimator (region + weight + service tier → a date range). No
-LLM. Same input, same output — the kind of agent another agent can call and
-actually trust inside an order flow.
-
-Then I built a second agent, `order_intake`, whose handler *calls the first one
-over the network* — and watched a real two-hop agent-to-agent chain light up:
-an order comes in, the intake agent asks the estimator for a delivery window,
-and a confirmed order comes back. Two agents, one network, no glue code. That's
-the part that actually feels like the future.
-
-What's genuinely good:
-→ The journey shape is right — short, linear, no detours.
-→ The error messages are the best part. When I tried to log in from a headless
-box, it didn't hang or dump a stack trace — it detected the SSH session and
-handed me two working alternatives. That's how error UX should read.
-→ `blocks check` gives clear, per-line pass/fail on your agent card.
-
-Where I hit friction (and this is the useful part):
-→ The very first command tripped me up on a standard Linux machine. First
-impressions are command #1 — that's the highest-leverage thing to smooth.
-→ The agent card advertises typed JSON IO, but in code you still hand-serialize
-it yourself. A small helper would close that gap and make the typed-contract
-story real end-to-end.
-
-I turned the whole run into a friction log and a short list of concrete fixes —
-because the fastest way to grow a network of agents is to make the first one
-effortless to ship.
-
-If you're building on the Internet of Agents, I'd love to compare notes. And if
-you've shipped an agent to a network like this — what tripped *you* up first?
-
-#DeveloperExperience #AIAgents #BlocksNetwork #DevRel #MCP
-
----
-
-*Variants to consider before posting: (a) lead with the deterministic-agent angle
-for an enterprise audience; (b) add a 20-sec screen capture of `blocks check`
-passing; (c) if posting while interviewing, keep the tone collaborative — "report
-from a build," not "review of a vendor.")*
+Note: the current draft is ~3,056 characters — slightly over LinkedIn's 3,000
+limit — so it still needs a ~60–100 char trim (or a short feed cut) before posting.
+Variants to consider: (a) tighten to a short feed post (hook + the two-agent PoC +
+the one-line "reuse, don't rebuild" takeaway), moving the due-diligence list to the
+comments; (b) add a 20-sec screen capture of the two providers + the live call as
+proof; (c) when posting while interviewing, this evaluation voice is the safe
+register — a builder's assessment, not a vendor review or a job pitch.
