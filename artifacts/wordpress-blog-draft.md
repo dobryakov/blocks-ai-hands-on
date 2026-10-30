@@ -96,7 +96,27 @@ This is the segment that will actually decide an enterprise rollout, and it's a 
 - **Private by default is the right default.** `blocks register` lists an agent as **private and free**. A private agent is reachable only by its owner and by explicitly granted users/orgs — notably, *org membership alone grants nothing*; the owner has to grant their own organization. That's a defensible posture: you can stand an agent up and demo internal reuse without ever exposing it publicly. Making it public/paid is a separate, deliberate `blocks publish`.
 - **Credential hygiene is on you, and the tooling helps.** The API key lives in `~/.config/blocks/contexts.json` or a project `.env`. The skill/docs are explicit: never hardcode, print, commit, or ship the key to browser code; browser apps must use a user-auth flow, not a provider key. The scaffold `.gitignore`s `.env`. Good defaults — but the `BLOCKS_API_KEY` env-var pattern for automation means key sprawl into CI secrets, so treat it like any other high-value token.
 - **Dependency surface needs a story.** A freshly scaffolded project's `npm install` ends with **6 high-severity vulnerabilities** reported by npm. I did *not* verify whether those are in Blocks' own code or in transitive dependencies — but it doesn't matter for the optics: the first `npm install` your security team runs throws six highs, and there's no published SBOM or security page to hand them. For the enterprise buyer this is the single most important thing to get ahead of.
-- **Data governance is under-documented.** Beyond where credentials are stored and the private/grant model, I didn't find a clear statement of data residency or how task payloads are handled in transit/at rest on the network. Not a red flag by itself — but an unanswered question a reviewer will ask.
+- **Data governance is better documented than the quickstart suggests** — it's just not where a developer lands. The public security page and the architecture whitepaper cover transport, encryption, isolation and residency. It's worth its own section, below.
+
+## Data governance — the part security reads first
+
+I went past the quickstart into the public security page and the architecture whitepaper. Here's what's actually stated — and what still isn't.
+
+**Transport and connection model.** Blocks is built on PubNub's globally distributed messaging infrastructure. An agent opens **one outbound connection on port 443** and receives work over it — "no inbound ports, no public endpoints." For a security team that's a strong starting posture: no firewall holes, no listening sockets on your agents. Task dispatch, control messages, results, streamed events and presence all ride that one connection.
+
+**Encryption.** The security page states **TLS on every connection, with no plaintext fallback**, and **AES-256 at rest**; the whitepaper adds "there is no plaintext path between any two components," and that an agent's connection access tokens **expire within seconds** and refresh silently. The exact TLS version and cipher suites aren't published. Notably, an agent **can require end-to-end encryption of task inputs and outputs "so not even the operator can read them"** — an optional, per-agent control (very likely the `consumerPublicKey` I saw on task messages in the SDK). For a sensitive-data use case, that E2E option is the single most important lever.
+
+**Where the bytes actually go.** This lined up with something I hit in code. Small results come back inline in the task message; **file artifacts go to managed object storage via a short-lived pre-signed URL** — "the socket carries the coordination messages but not the bytes themselves." So large payloads transit object storage, not the message bus. **Task state** — input, status, current step, intermediate results, final output — is **persisted in the platform's database at every transition.** Good for auditability; worth noting that *intermediate* results are persisted too, not just the final answer.
+
+**Isolation.** Tenant-isolation rules apply on every point-of-presence, and messages are visible only to subscribers authorized for that tenant's channels. Admins can **revoke an agent's channel-level access within seconds**, and streaming credentials are scoped to a single channel.
+
+**Residency.** There's a path, not a blanket guarantee: a customer with residency requirements can **run dedicated instances on their own infrastructure**, with the platform routing some tasks to those and others to the shared pool. Traffic goes to the closest PoP and replicates across PoPs as needed; the docs don't state which region shared-pool task data lives in. **Air-gapped networks are explicitly not supported.**
+
+**Compliance.** The security page shows badges for **SOC 2 Type II, SOC 3, HIPAA (with BAA), GDPR, CCPA and ISO/IEC 27001**, and points to PubNub's Trust Center for attestations — but audit dates, scope and certificates aren't on the page, and the launch press release's other claims (zero-trust, a 99.999% SLA) aren't substantiated there.
+
+**Still unconfirmed — ask before procurement:** data-retention and deletion periods, the TLS version/cipher baseline, which region shared-pool task data resides in, the audit scope behind each compliance badge, and whether the platform analyzes or trains on payloads (the security page doesn't say; the only adjacent statement is the optional per-agent E2E control).
+
+**Bottom line for security:** the architecture is defensible — outbound-only, TLS everywhere, per-tenant channel isolation, seconds-to-revoke credentials, optional end-to-end encryption, and a dedicated-instance escape hatch for residency. The gaps are documentation and attestation, not obvious design holes. I verified the connection posture and the inline-vs-object-storage artifact split against my own build; the encryption, isolation, residency and compliance claims are read from Blocks' own docs, not independently audited.
 
 ## Does it actually work? Yes — live.
 
@@ -130,3 +150,7 @@ blocks register                      # private + free
 blocks run                           # start the provider
 npx tsx trigger.ts                   # call it (or let another agent call it)
 ```
+
+---
+
+*Sources for the governance section: the Blocks.ai security page (https://blocks.ai/security) and architecture whitepaper (https://blocks.ai/architecture/network-whitepaper), plus the official docs at config.blocks.ai. Everything else is from my own build on 2026-10-30; where a claim is read from docs rather than independently audited, the text says so.*
