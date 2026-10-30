@@ -17,3 +17,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 *.swp
+
+# PPTX render artifacts
+artifacts/*.pdf
+artifacts/slide-*.jpg
