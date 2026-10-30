@@ -32,9 +32,12 @@ reproducible and auditable, the kind of agent an enterprise order flow can
 trust). I went `blocks init → edit card + handler → blocks check → offline test
 → login → register → run → agent-to-agent call`, took it **all the way live on the
 real network** (registered private+free, ran the provider, called it from a consumer
-script and got the result back), and kept a running friction log. I hit **9 distinct
-friction points** and distilled them into **6 prioritized onboarding proposals**.
-The two that matter most:
+script and got the result back). Then — to demonstrate the network's actual point — I
+built a **second agent, `order_intake`** (an online-shop order processor) whose handler
+**calls the first agent over the network**, and ran a live **two-hop agent-to-agent chain**:
+`order_intake → delivery_slot_estimator`. I kept a running friction log throughout:
+**10 distinct friction points** distilled into **7 prioritized onboarding proposals**.
+The two that matter most for day-one DevRel:
 1. The **very first command** — `npm i -g @blocks-network/cli` — hard-fails with
    `EACCES` on a normal managed Linux box, and the official `install.sh` is
    literally the same command, so there's no working fallback. I worked around it
@@ -51,10 +54,13 @@ The two that matter most:
    pass/fail.
 
 **Result.**
-A working agent that I ran **live end-to-end**: registered on Blocks Network
-(private + free), provider online in ~3s, and a successful agent-to-agent call —
-task created, progress event streamed back, correct JSON result artifact returned.
-Plus a structured friction log and six fixes scoped to exactly this
+Two working agents I ran **live end-to-end** on Blocks Network (both private + free),
+and a successful **two-hop agent-to-agent chain**: a consumer calls `order_intake`,
+whose handler dispatches a *separate* network task to `delivery_slot_estimator` and
+folds the delivery window back into a confirmed order. I could show the orchestrator
+reporting "Asking delivery_slot_estimator…" and the estimator's own provider logging a
+distinct completed task — concrete proof the call crossed the network. Plus a structured
+friction log and seven fixes scoped to exactly this
 role — install, the type contract, offline-test scaffolding, a headless-auth doc
 path, and an enterprise "first 30 minutes" track. I can hand any of these to
 engineering as a concrete ticket, and I can walk the hiring manager through the
@@ -89,6 +95,12 @@ I built a tiny one on purpose: `delivery_slot_estimator`, a *deterministic*
 delivery-window estimator (region + weight + service tier → a date range). No
 LLM. Same input, same output — the kind of agent another agent can call and
 actually trust inside an order flow.
+
+Then I built a second agent, `order_intake`, whose handler *calls the first one
+over the network* — and watched a real two-hop agent-to-agent chain light up:
+an order comes in, the intake agent asks the estimator for a delivery window,
+and a confirmed order comes back. Two agents, one network, no glue code. That's
+the part that actually feels like the future.
 
 What's genuinely good:
 → The journey shape is right — short, linear, no detours.

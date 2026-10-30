@@ -145,6 +145,27 @@ visibilities.
 **Fix idea:** add a "list my agents" command (all visibilities) and have `search` note when a
 private agent of yours matches the query. (see Proposals P6)
 
+## F10 — Second agent + two-hop agent-to-agent chain worked live 🟢 (keep this) — with one doc gap 🟠
+**Where:** built a second agent `order_intake` (online-shop order processor) whose handler calls
+`delivery_slot_estimator` over the network, then ran **both** providers and called `order_intake`.
+**What happened:** the full orchestrator→specialist chain ran first try —
+`trigger → order_intake → delivery_slot_estimator → back`. The consumer saw
+`[progress] Asking delivery_slot_estimator for a delivery window (EU-East, 51kg)…` then a confirmed
+order with the window filled in. **Proof it was a real second network task:** the estimator
+provider logged `Task 098e8916… completed`, a *different* taskId from the inbound order task
+(`356f4b70…`). So `order_intake` genuinely dispatched a fresh task to another registered agent,
+not a local function call. Using `ctx.taskClient.sendMessage(... ownerId: task.ownerId ...)` +
+`session.waitForTerminal()` + `session.listArtifacts()` is a clean, ergonomic handler-side API. 🟢
+**The doc gap 🟠:** the Node reference shows the `ctx.taskClient` pattern but **never says where its
+outbound credentials come from** — no `apiKey`/`baseUrl` on `TaskContext`, and `BLOCKS_API_KEY`
+isn't in the SDK env-var list. I ran the provider with both a logged-in CLI profile *and*
+`BLOCKS_API_KEY` in the environment, so I can't tell which actually authenticated the sub-call —
+and neither can a developer deploying `order_intake` to a server/container, where "what do I
+provision so my agent can call another agent?" is the make-or-break question. The reference also
+never shows constructing a client in a handler, so you only succeed if you happen to know to use
+`ctx.taskClient`. **Fix idea:** a dedicated "calling another agent from your handler" doc section —
+what `ctx.taskClient` is, how it's authenticated, and what to provision in production. (P7)
+
 ---
 
 # Developer-journey summary (discovery → first build)
@@ -165,6 +186,7 @@ private agent of yours matches the query. (see Proposals P6)
 | Run provider | `blocks run` | Online in ~3s, structured logs, playground env | F8 🟢 |
 | **A2A call** | `trigger.ts` | **Succeeded live** — task→progress→artifact→done | F8 🟢 / 🟡 |
 | Find my agent | `blocks search` | Didn't list my private agent (no "list-mine") | F9 🟡 |
+| **2nd agent + 2-hop A2A** | `order_intake`→`estimator` | **Succeeded live** (distinct taskIds); clean `ctx.taskClient` API | F10 🟢 / 🟠 |
 
 **Headline:** the *shape* of the journey is right — short, linear, `init → check → login →
 register → run → call`, with genuinely good error messages at the two places I hit a wall
@@ -216,4 +238,13 @@ lists the public catalog, so your private agent appears nowhere and it reads lik
 `blocks agents` / `blocks list-mine` that shows your own agents across all visibilities, and have
 `search` note when one of your private agents matches. *Segment:* both; closes the
 register→confirm loop that every first-time dev walks.
+
+### P7 — Document "calling another agent from your handler" (A2A outbound)
+Agent-to-agent is the product's whole premise, yet the reference never explains how a handler's
+`ctx.taskClient` is authenticated or what to provision in production. Add a dedicated section: use
+`ctx.taskClient.sendMessage({ agentName, ownerId: task.ownerId, requestParts })`, await with
+`session.waitForTerminal()`, collect via `session.listArtifacts()` / `downloadArtifact`, and a clear
+statement of where the outbound credentials come from on a deployed provider. This is the single
+most important thing to document well, because it's the thing that makes Blocks *Blocks*.
+*Segment:* both. My `order_intake` → `delivery_slot_estimator` pair is a ready-made sample for it.
 
