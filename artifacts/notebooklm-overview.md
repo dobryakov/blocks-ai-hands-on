@@ -1,6 +1,6 @@
 Title: Blocks.ai (PubNub) — an overview for a video presentation
 
-Purpose of this document: a self-contained, factual source for NotebookLM to turn into a narrated video overview of Blocks.ai — what it is, how it works, what it's like to build on, and where it stands on security. It is written in plain declarative sentences so it narrates cleanly. It is based on a hands-on build on 2026-10-30 plus the vendor's own documentation (links at the end). Where a claim comes from the docs rather than from direct testing, the text says so.
+Purpose of this document: a self-contained, factual source for NotebookLM to turn into a narrated video overview of Blocks.ai — what it is, how it works, what it's like to build on, where it stands on security, and, for the enterprise decision-makers who must approve it, why it matters to the business rather than only to engineers. It is written in plain declarative sentences so it narrates cleanly. It is based on a hands-on build on 2026-10-30 plus the vendor's own documentation (links at the end). Where a claim comes from the docs rather than from direct testing, the text says so.
 
 ==================================================
 1. What Blocks.ai is
@@ -101,7 +101,36 @@ Friction worth fixing (all onboarding and documentation issues, not architecture
 Two audiences. Individual developers can build and register agents, call other agents, and optionally publish and monetize them on the public network. Enterprises can make agents discoverable and reusable inside the organization, private by default, with dedicated instances available for data-residency needs — the "do not rebuild the same agent five times" case.
 
 ==================================================
-10. Key facts for quick reference
+10. Why this matters to an enterprise decision-maker
+==================================================
+
+For a decision-maker, Blocks is less a developer tool and more an answer to problems that are about to become expensive. Enterprises are starting to accumulate AI agents the same way they once accumulated microservices and SaaS subscriptions — faster than anyone governs them. Four business problems follow, and Blocks speaks to each.
+
+First, duplicated build cost. Without a shared network, every team rebuilds the same capabilities — a document parser, a pricing calculator, a policy checker — and wires its own one-off integrations to reach them. That is an N-by-M explosion of custom plumbing. The "register a capability once, reuse it everywhere" model collapses that into agents any authorized team can call. The savings are not in any single agent; they are in the fifth team not rebuilding what the first four already shipped.
+
+Second, shadow AI and sprawl. Agents that teams stand up quietly are invisible to the organization: ungoverned, unaudited, and duplicated. A network with private-by-default registration and explicit grants gives the organization a place where agents are declared, discoverable, and access-controlled. It turns shadow AI into an inventory leadership can actually see.
+
+Third, the integration and operational tax. Because an agent opens a single outbound connection on port 443 with no inbound ports, rollout does not require firewall changes, public endpoints, or bespoke per-integration work. That lowers both the security-review burden and the time to first working result — the two things that usually kill internal platform adoption.
+
+Fourth, vendor and standards risk. Blocks is built on PubNub, a messaging-infrastructure company with more than fifteen years in production, rather than on a greenfield startup stack, and agents interact through a reusable agent-to-agent pattern instead of bespoke glue. That reduces lock-in to any one team's homegrown bus and gives the capability a longer expected lifespan.
+
+The strategic framing a leader can take upward is simple: this is the connective tissue for an internal "Internet of Agents." It is the same bet that paid off when enterprises standardized on a service bus or an API gateway instead of letting every team wire point-to-point links. And crucially, the governance features are what make it approvable, not merely interesting — private-by-default, organization-scoped grants, channel access that can be revoked within seconds, tenant isolation, optional end-to-end encryption, and dedicated instances for data residency. For a regulated enterprise, those features are the difference between a pilot that a CISO blocks and one that a CISO sponsors.
+
+==================================================
+11. A low-risk way to adopt it
+==================================================
+
+A decision-maker does not have to bet the organization to find out whether this works. A contained pilot proves the economics:
+
+- Pick one genuinely shared capability — something two or more teams have each half-built — and register it private, free, and owned by a central platform team.
+- Grant access to one partner team and have them call it from their own agent, reproducing the two-agent reuse pattern end to end inside the organization.
+- Run the security review in parallel, using the vendor's security page and architecture whitepaper, and get written answers to the open questions: data retention and deletion, which region shared-pool task data resides in, the TLS and cipher baseline, the audit scope behind each compliance badge, and whether the platform analyzes or trains on payloads. If data residency is a hard requirement, scope a dedicated instance from the start.
+- Measure the result in business terms, not technical ones: engineering hours saved versus rebuilding, the time from a team's request to a working call, and the number of teams reusing the capability.
+
+If the pilot succeeds, the capability catalog grows the way an API catalog does, and the decision to standardize becomes evidence-based rather than a leap of faith. If it does not, the cost was one agent and one review.
+
+==================================================
+12. Key facts for quick reference
 ==================================================
 
 - Vendor: PubNub. Product: Blocks.ai. Launched: July 2026.
@@ -115,7 +144,7 @@ Two audiences. Individual developers can build and register agents, call other a
 - Residency: dedicated instances on customer infrastructure; air-gapped not supported.
 
 ==================================================
-11. Vendor documentation and sources
+13. Vendor documentation and sources
 ==================================================
 
 Primary vendor sources (use these as the authoritative references):
