@@ -118,6 +118,33 @@ devs iterate on logic with zero network and zero credentials — the fastest pos
 **Fix idea:** ship a `handler.test.ts` in the scaffold and a one-paragraph "offline testing"
 doc section. (see Proposals P3)
 
+## F8 — Live register → run → agent-to-agent call worked first try 🟢 (keep this)
+**Where:** `blocks register` → `blocks run` → `npx tsx trigger.ts`, on the real network.
+**What happened:** after authenticating with a dashboard API key (`blocks login --api-key-stdin`),
+registration printed clear `Visibility: Private / Billing: Free`, the provider came online in ~3s
+with structured JSON logs, and the consumer call completed end-to-end: task created
+(`taskId e9e1d71e…`), a progress event streamed back, the JSON result artifact arrived, and a
+clean terminal event closed the session. The whole A2A round trip just worked. The provider logs
+also surface a useful fact: a `free` billingMode agent runs in a **"playground" environment**
+(`registry billingMode: free — using playground environment`) — good to know for presence/routing,
+but it's not explained anywhere in the quickstart.
+**Minor:** the handler calls `ctx.reportStatus` twice ("Parsing order…" then "Estimating slot…"),
+but only the **second** arrived as a `[progress]` event on the consumer. The first was dropped —
+most likely a subscribe-timing race (status fired before the consumer's stream attached). A dev
+who wires early status into their UX would be puzzled. Worth documenting the ordering guarantee.
+
+## F9 — `blocks search <my-own-agent>` doesn't surface the agent I just registered 🟡
+**Where:** `blocks search delivery_slot_estimator` right after a successful `blocks register`.
+**What happened:** search returned a list of fuzzy-matched **public** agents (Reading_Time_Estimator,
+Text_Statistics, …) and **not** my own agent. That's technically correct — my agent is *private*
+(registered, not published), and `search` lists the public catalog — but the first instinct after
+registering is "let me find my agent," and getting back a list of unrelated public agents with no
+line saying "your private agent `delivery_slot_estimator` is registered but unlisted" reads like a
+failure. There's no obvious `blocks agents` / `blocks list-mine` to see *your own* agents across
+visibilities.
+**Fix idea:** add a "list my agents" command (all visibilities) and have `search` note when a
+private agent of yours matches the query. (see Proposals P6)
+
 ---
 
 # Developer-journey summary (discovery → first build)
@@ -133,7 +160,11 @@ doc section. (see Proposals P3)
 | Validate | `blocks check` | Passed; clear per-line OK/FAIL output | 🟢 |
 | Test offline | (self-rolled) | Handler works; path undocumented | F7 🟡 |
 | Login | `blocks login --network` | Blocked (headless) but excellent fallback msg | F6 🟢 / F2 🟡 |
-| Register/run/call | — | Needs dashboard API key (live, handed off) | — |
+| Login (headless) | `blocks login --api-key-stdin` | Worked; stored profile cleanly | 🟢 |
+| Register | `blocks register` | Private + free; clear visibility/billing output | 🟢 |
+| Run provider | `blocks run` | Online in ~3s, structured logs, playground env | F8 🟢 |
+| **A2A call** | `trigger.ts` | **Succeeded live** — task→progress→artifact→done | F8 🟢 / 🟡 |
+| Find my agent | `blocks search` | Didn't list my private agent (no "list-mine") | F9 🟡 |
 
 **Headline:** the *shape* of the journey is right — short, linear, `init → check → login →
 register → run → call`, with genuinely good error messages at the two places I hit a wall
@@ -178,4 +209,11 @@ bad look), publish an SBOM / security page, and ship one **enterprise sample age
 agent made discoverable *inside* an org (private registration + org grant) rather than built
 from scratch — the exact "don't reinvent the wheel" story. *Segment:* enterprise. My
 `delivery_slot_estimator` is a seed for this: deterministic, private-by-default, auditable output.
+
+### P6 — "List my agents" + private-match hint in search
+After registering, the natural next move is to find your agent — but `blocks search <name>` only
+lists the public catalog, so your private agent appears nowhere and it reads like a failure. Add a
+`blocks agents` / `blocks list-mine` that shows your own agents across all visibilities, and have
+`search` note when one of your private agents matches. *Segment:* both; closes the
+register→confirm loop that every first-time dev walks.
 

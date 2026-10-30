@@ -30,8 +30,10 @@ I built `delivery_slot_estimator`, a small deterministic agent (delivery-window
 estimator by region / weight / service tier — deliberately no LLM, so output is
 reproducible and auditable, the kind of agent an enterprise order flow can
 trust). I went `blocks init → edit card + handler → blocks check → offline test
-→ login → register/run/call`, and kept a running friction log. I hit **7 distinct
-friction points** and distilled them into **5 prioritized onboarding proposals**.
+→ login → register → run → agent-to-agent call`, took it **all the way live on the
+real network** (registered private+free, ran the provider, called it from a consumer
+script and got the result back), and kept a running friction log. I hit **9 distinct
+friction points** and distilled them into **6 prioritized onboarding proposals**.
 The two that matter most:
 1. The **very first command** — `npm i -g @blocks-network/cli` — hard-fails with
    `EACCES` on a normal managed Linux box, and the official `install.sh` is
@@ -49,8 +51,10 @@ The two that matter most:
    pass/fail.
 
 **Result.**
-A working, validated agent (`blocks check` passes, handler verified against three
-cases offline), a structured friction log, and five fixes scoped to exactly this
+A working agent that I ran **live end-to-end**: registered on Blocks Network
+(private + free), provider online in ~3s, and a successful agent-to-agent call —
+task created, progress event streamed back, correct JSON result artifact returned.
+Plus a structured friction log and six fixes scoped to exactly this
 role — install, the type contract, offline-test scaffolding, a headless-auth doc
 path, and an enterprise "first 30 minutes" track. I can hand any of these to
 engineering as a concrete ticket, and I can walk the hiring manager through the
