@@ -1,0 +1,89 @@
+{
+  "identity": {
+    "agentName": "delivery_slot_estimator",
+    "displayName": "Delivery Slot Estimator",
+    "description": "Deterministic delivery-window estimator for retail/furniture orders by region, weight and service tier.",
+    "version": "1.0.0",
+    "provider": {
+      "organization": "dobryakov"
+    }
+  },
+  "capabilities": {
+    "taskKinds": [
+      "request"
+    ]
+  },
+  "io": {
+    "inputs": [
+      {
+        "id": "request",
+        "description": "Order details to estimate a delivery window for. Sent as a JSON string in the part text.",
+        "contentType": "application/json",
+        "required": true,
+        "example": {
+          "text": "{\"region\":\"EU-East\",\"weightKg\":45,\"serviceTier\":\"standard\",\"orderDate\":\"2026-10-30\"}"
+        },
+        "schema": {
+          "type": "object",
+          "required": [
+            "region",
+            "weightKg"
+          ],
+          "properties": {
+            "region": {
+              "type": "string",
+              "title": "Destination region",
+              "enum": [
+                "EU-West",
+                "EU-East",
+                "Balkans"
+              ],
+              "default": "EU-East"
+            },
+            "weightKg": {
+              "type": "number",
+              "title": "Parcel weight (kg)",
+              "minimum": 0,
+              "default": 10
+            },
+            "serviceTier": {
+              "type": "string",
+              "title": "Service tier",
+              "enum": [
+                "standard",
+                "express"
+              ],
+              "default": "standard"
+            },
+            "orderDate": {
+              "type": "string",
+              "title": "Order date (YYYY-MM-DD, optional)"
+            }
+          }
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "id": "result",
+        "description": "Estimated delivery window as JSON (estimatedDays, deliveryWindow, surchargeDays, notes).",
+        "contentType": "application/json",
+        "guaranteed": true
+      }
+    ]
+  },
+  "tags": [
+    {
+      "id": "main",
+      "name": "Main",
+      "description": "Estimates a delivery slot"
+    }
+  ],
+  "runtime": {
+    "handler": "./handler.ts",
+    "handlerExport": "default",
+    "concurrency": 1,
+    "expectedInstances": 1,
+    "maxRunningTimeSec": 30
+  }
+}
