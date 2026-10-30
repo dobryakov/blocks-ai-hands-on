@@ -10,8 +10,12 @@ hands-on build on 2026-10-30. Each artifact now lives as its own file.
   points → 7 fixes, plus the enterprise-bus bridge).
 - **[`artifacts/linkedin-post-draft.md`](artifacts/linkedin-post-draft.md)** —
   paste-ready LinkedIn post (no markdown): an enterprise architect's due-diligence
-  on Blocks as the substrate for an internal agent-to-agent landscape. ~3,052
-  chars — a touch over LinkedIn's 3,000 limit, so trim slightly before posting.
+  on Blocks as the substrate for an internal agent-to-agent landscape. ~2,912
+  chars, under LinkedIn's 3,000 limit.
+- **[`artifacts/wordpress-blog-draft.md`](artifacts/wordpress-blog-draft.md)** —
+  long-form engineering field report for developers, DevOps, analysts and security
+  teams: the two-agent build, the live A2A call, and a discipline-by-discipline
+  deep-dive (SDK, install/auth, reuse model, security surface).
 - **[`FRICTION-LOG.md`](FRICTION-LOG.md)** — the full developer-journey friction
   log (10 points) + 7 onboarding proposals + the discovery→build summary.
 
