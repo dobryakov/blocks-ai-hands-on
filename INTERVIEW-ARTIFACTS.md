@@ -16,6 +16,9 @@ hands-on build on 2026-10-30. Each artifact now lives as its own file.
   long-form engineering field report for developers, DevOps, analysts and security
   teams: the two-agent build, the live A2A call, and a discipline-by-discipline
   deep-dive (SDK, install/auth, reuse model, security surface).
+- **[`artifacts/notebooklm-overview.md`](artifacts/notebooklm-overview.md)** —
+  self-contained factual overview for uploading to NotebookLM (to generate a video
+  presentation); includes vendor documentation links.
 - **[`FRICTION-LOG.md`](FRICTION-LOG.md)** — the full developer-journey friction
   log (10 points) + 7 onboarding proposals + the discovery→build summary.
 

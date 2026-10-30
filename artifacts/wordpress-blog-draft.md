@@ -98,6 +98,18 @@ This is the segment that will actually decide an enterprise rollout, and it's a 
 - **Dependency surface needs a story.** A freshly scaffolded project's `npm install` ends with **6 high-severity vulnerabilities** reported by npm. I did *not* verify whether those are in Blocks' own code or in transitive dependencies — but it doesn't matter for the optics: the first `npm install` your security team runs throws six highs, and there's no published SBOM or security page to hand them. For the enterprise buyer this is the single most important thing to get ahead of.
 - **Data governance is better documented than the quickstart suggests** — it's just not where a developer lands. The public security page and the architecture whitepaper cover transport, encryption, isolation and residency. It's worth its own section, below.
 
+## Can a human talk to an agent — and talk back?
+
+"Agent-to-agent" is the headline, so it's fair to ask whether a human fits on either end as genuine two-way communication — not an approval gate or an escalation, but back-and-forth. Here's what the docs actually support:
+
+- **Human → agent and agent → human (one direction each) is first-class.** You scaffold a web client with `blocks init <name> --mode webapp`. A browser consumer authenticates without an embedded key — an embedded `BlocksAuth` widget, or your own `tokenEndpoint` / backend proxy minting short-lived JWTs. That human client submits a task and receives the agent's **progress, artifacts and streamed output** back live. So a person can drive an agent from a web UI and watch it respond in real time.
+- **Long-lived channels exist.** Besides one-shot `request` tasks, there are **`pipe` tasks** — "long-running streaming tasks with an explicit duration" (1 minute to 30 days) where the handler loops until cancelled or expired and streams to the consumer. That's the primitive for a persistent agent↔client channel rather than a single call.
+- **The protocol models bidirectional streams.** A stream in the agent card declares `direction: "outbound" | "inbound" | "bidirectional"`; a bidirectional event stream carries both an `outboundSchema` and an `inboundSchema`, and a handler can *read* an inbound/bidirectional stream (its `write()` is rejected on an inbound-only stream). So the shape for a client to feed data *into* a running task is defined at the schema level.
+
+Where it stops short — and this is the honest caveat: I found **no documented consumer-side write method** to push into that inbound/bidirectional stream. Every consumer example is read-only (`bytes()`, `events()`, `inbound`), and a `TaskSession` exposes only `cancel/terminate/close` — no `send()` or `reply()`. There is also **no chat, turn-taking, or conversation abstraction** in the docs, and no notion of human presence.
+
+So continuous human↔agent interaction is clearly *intended* — web clients, pipe tasks, and a bidirectional stream direction are all there — but symmetric back-and-forth *during* a task (human sends more input mid-run, agent responds, repeat) isn't documented end-to-end on the consumer side today. You'd build the turn-taking layer yourself on top of bidirectional streams. I'm reporting this from the docs: I built the request/response and agent-to-agent paths, not a live bidirectional-stream conversation, so treat the two-way-during-a-task part as "the spec says yes, the consumer SDK doesn't yet show how," not as something I ran.
+
 ## Data governance — the part security reads first
 
 I went past the quickstart into the public security page and the architecture whitepaper. Here's what's actually stated — and what still isn't.
