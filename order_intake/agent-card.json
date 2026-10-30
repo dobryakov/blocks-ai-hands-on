@@ -1,0 +1,99 @@
+{
+  "identity": {
+    "agentName": "order_intake",
+    "displayName": "Order Intake",
+    "description": "Validates an incoming online-shop order, derives region and weight, and calls delivery_slot_estimator to attach a promised delivery window.",
+    "version": "1.0.0",
+    "provider": {
+      "organization": "dobryakov"
+    }
+  },
+  "capabilities": {
+    "taskKinds": [
+      "request"
+    ]
+  },
+  "io": {
+    "inputs": [
+      {
+        "id": "request",
+        "description": "Incoming order as a JSON string: orderId, country (ISO-2), items[], serviceTier.",
+        "contentType": "application/json",
+        "required": true,
+        "example": {
+          "text": "{\"orderId\":\"A-1042\",\"country\":\"PL\",\"items\":[{\"sku\":\"SOFA-3\",\"qty\":1,\"weightKg\":48,\"price\":899},{\"sku\":\"CUSHION\",\"qty\":2,\"weightKg\":1.5,\"price\":25}],\"serviceTier\":\"standard\"}"
+        },
+        "schema": {
+          "type": "object",
+          "required": [
+            "orderId",
+            "country",
+            "items"
+          ],
+          "properties": {
+            "orderId": {
+              "type": "string",
+              "title": "Order ID"
+            },
+            "country": {
+              "type": "string",
+              "title": "Destination country (ISO-2)"
+            },
+            "serviceTier": {
+              "type": "string",
+              "title": "Service tier",
+              "enum": [
+                "standard",
+                "express"
+              ],
+              "default": "standard"
+            },
+            "items": {
+              "type": "array",
+              "title": "Line items",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "sku": {
+                    "type": "string"
+                  },
+                  "qty": {
+                    "type": "number"
+                  },
+                  "weightKg": {
+                    "type": "number"
+                  },
+                  "price": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "id": "result",
+        "description": "Confirmed order enriched with region, totals and the delivery window from delivery_slot_estimator.",
+        "contentType": "application/json",
+        "guaranteed": true
+      }
+    ]
+  },
+  "tags": [
+    {
+      "id": "main",
+      "name": "Main",
+      "description": "Processes an incoming order and attaches a delivery window"
+    }
+  ],
+  "runtime": {
+    "handler": "./handler.ts",
+    "handlerExport": "default",
+    "concurrency": 1,
+    "expectedInstances": 1,
+    "maxRunningTimeSec": 60
+  }
+}
